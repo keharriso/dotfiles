@@ -1,0 +1,18 @@
+[user]
+	name = Kevin Harrison
+	email = keharriso@gmail.com
+
+[color]
+	diff = auto
+	status = auto
+	branch = auto
+	ui = auto
+
+[core]
+	pager = less -R
+
+[push]
+	default = matching
+
+[alias]
+	graph = log --graph --decorate --pretty=oneline --abbrev-commit
