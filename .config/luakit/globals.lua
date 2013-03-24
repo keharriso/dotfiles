@@ -64,6 +64,7 @@ search_engines.default = search_engines.duckduckgo
 domain_props = {
     ["all"] = {
 --        enable_private_browsing = true
+        user_stylesheet_uri     = "file://" .. luakit.data_dir .. "/styles/global.css";
     },
     ["bbs.archlinux.org"] = {
         user_stylesheet_uri     = "file://" .. luakit.data_dir .. "/styles/dark.css",
