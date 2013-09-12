@@ -3,7 +3,7 @@ local themes = (os.getenv 'XDG_CONFIG_HOME' or os.getenv 'HOME'..'/.config')..'/
 local root = themes..'/'..title
 
 theme = {
-	font = 'clean 12',
+	font = 'clean 10',
 
 	bg_normal   = '#f0f5fd',
 	bg_focus    = '#2e322e',

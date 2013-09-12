@@ -4,8 +4,7 @@ xrdb -merge ~/.Xresources
 urxvtd -q -o -f &>/dev/null
 unclutter -idle 2 -jitter 10 &
 xcompmgr -c -C -t-15 -l-15 -r12 -o.75 &
-pnmixer &
-wicd-client -t &
+(pnmixer & sleep 0.6 ; wicd-client -t) &
 
 case "$1" in
 awesome) ;&

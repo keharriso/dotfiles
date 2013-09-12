@@ -21,13 +21,13 @@ alias ls='ls --color=auto --classify'
 alias rm='rm -i'
 alias grep='grep --color=auto'
 alias mgrep='lsmod | grep'
-alias pgrep='/bin/ps -ef | grep'
 alias startx='exec startx &>~/.xlog'
 alias frotz='frotz -w $COLUMNS -h $LINES'
 alias pacman='yaourt'
 alias less='less -R'
 alias ps="ps --forest -f"
 alias psu="ps -u$USER"
+alias pgrep="/bin/ps -f | grep"
 
 # The following lines were added by compinstall
 zstyle ':completion:*' completer _oldlist _expand _complete _ignored _match _correct _approximate _prefix
