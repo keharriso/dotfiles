@@ -5,6 +5,7 @@ urxvtd -q -o -f &>/dev/null
 unclutter -idle 2 -jitter 10 &
 xcompmgr -c -C -t-15 -l-15 -r12 -o.75 &
 (pnmixer & sleep 0.6 ; wicd-client -t) &
+[ -z "`pidof timidity`" ] && timidity -iA &
 
 case "$1" in
 awesome) ;&

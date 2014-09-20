@@ -32,6 +32,8 @@ if &t_Co > 2 || has("gui_running")
   set hlsearch
 endif
 
+set tw=999
+
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
 
@@ -45,10 +47,11 @@ if has("autocmd")
   autocmd FileType vim setlocal sw=2 ts=2 noet
 	autocmd FileType sh setlocal sw=4 ts=4 noet
 	autocmd FileType zsh setlocal sw=4 ts=4 noet
-	autocmd FileType c setlocal sw=4 ts=4 noet
-	autocmd FileType cpp setlocal sw=4 ts=4 noet
+	autocmd FileType c setlocal sw=4 ts=4 noet tw=78
+	autocmd FileType cpp setlocal sw=4 ts=4 noet tw=78
 	autocmd FileType conf setlocal sw=4 ts=4 noet
 	autocmd FileType xml setlocal sw=4 ts=4 noet
+	autocmd FileType ruby setlocal sw=4 ts=4 noet
 	autocmd FileType python setlocal sw=4 sts=4 et
 	autocmd FileType haskell setlocal sw=4 sts=4 et
 	let hs_highlight_boolean="yes"
@@ -60,9 +63,16 @@ if has("autocmd")
 	autocmd FileType spate setlocal sw=4 sts=4 et
 	autocmd FileType actionscript setlocal sw=4 ts=4 noet smartindent
 	autocmd FileType html setlocal sw=2 ts=2 noet
+	autocmd FileType llvm setlocal sw=4 ts=4 noet smartindent
+	autocmd FileType bnfc setlocal sw=4 ts=4 noet smartindent
+	autocmd FileType cmake setlocal sw=4 ts=4 noet tw=78
 
 	au BufRead,BufNewFile *.as set filetype=actionscript
 	au! Syntax actionscript source $HOME/.vim/actionscript.vim
+	au BufRead,BufNewFile *.llvm set filetype=llvm
+	au BufRead,BufNewFile *.ll set filetype=llvm
+	au BufRead,BufNewFile *.bnfc set filetype=bnfc
+	au BufRead,BufNewFile *.cf set filetype=bnfc
 
   " Put these in an autocmd group, so that we can delete them easily.
   augroup vimrcEx
@@ -82,6 +92,17 @@ if has("autocmd")
     \ endif
 
   augroup END
+
+	augroup netrw_bindings
+		autocmd!
+		autocmd filetype netrw call Add_netrw_bindings()
+	augroup END
+
+	function! Add_netrw_bindings()
+		nmap <buffer> l <CR>
+		nmap <buffer> h -
+		nmap <buffer> <ESC><ESC> :q<CR>
+	endfunction
 
 else
 
@@ -106,20 +127,56 @@ set encoding=utf-8
 " Show line numbers
 set number
 
-" Highlight trailing whitespace
+" Highlight trailing whitespace and long lines
+function LongLines()
+	" Treat tabs as 8 characters long for long-line purposes
+	call matchadd('ColorColumn', '\%'.max([0, &tw+1]).'v\(.\+\)')
+	" Works for up to 8 tabs!
+	call matchadd('ColorColumn',
+				\ '\(^\t\([^\t]\+\%'.max([0, &tw -  6]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 13]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 20]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 27]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 34]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 41]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 48]).'c\|'.
+				\    '\t\([^\t]\+\%'.max([0, &tw - 55]).'c'  .
+				\  '\)\)\)\)\)\)\)\)\)\@<=.\+')
+endfunction
+
 highlight ExtraWhitespace ctermbg=red guibg=red
-match ExtraWhitespace /\s\+$/
-autocmd BufWinEnter * match ExtraWhitespace /\s\+$/
-autocmd InsertEnter * match ExtraWhitespace /\s\+\%#\@<!$/
-autocmd InsertLeave * match ExtraWhitespace /\s\+$/
+highlight ColorColumn ctermbg=9
+call matchadd('ExtraWhitespace', '\s\+$')
+call LongLines()
+autocmd BufWinEnter * call WinEnter()
+autocmd InsertEnter * call InsEnter()
+autocmd InsertLeave * call InsLeave()
 autocmd BufWinLeave * call clearmatches()
+
+function WinEnter()
+	call clearmatches()
+	call matchadd('ExtraWhitespace', '\s\+$')
+	call LongLines()
+endfunction
+
+function InsEnter()
+	call clearmatches()
+	call matchadd('ExtraWhitespace', '\s\+\%#\@<!$')
+	call LongLines()
+endfunction
+
+function InsLeave()
+	call clearmatches()
+	call matchadd('ExtraWhitespace', '\s\+$')
+	call LongLines()
+endfunction
 
 " Supplement delimitMate
 inoremap {<CR> {<CR>}<ESC>==O
-inoremap {<ESC> {<ESC>
-inoremap (<ESC> (<ESC>
-inoremap '<ESC> '<ESC>
-inoremap "<ESC> "<ESC>
+"inoremap {<ESC> {<ESC>
+"inoremap (<ESC> (<ESC>
+"inoremap '<ESC> '<ESC>
+"inoremap "<ESC> "<ESC>
 "inoremap <silent> <CR> <CR><ESC>kg_aa<ESC>Do<SPACE><BS><ESC>JI
 
 " Only match up to shared path
@@ -129,6 +186,12 @@ set wildmode=longest,list,full
 nnoremap <C-H> :Hexmode<CR>
 inoremap <C-H> <ESC>:Hexmode<CR>
 command -bar Hexmode call ToggleHex()
+
+" Directory view
+nmap <ESC><ESC> :e %:p:h<CR>:8<CR>
+
+" Viewport switching
+nnoremap <SPACE> <C-W><C-W>
 
 function ToggleHex()
 	let l:modified=&mod
