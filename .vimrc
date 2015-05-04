@@ -5,10 +5,10 @@ set nocompatible
 " allow backspacing over everything in insert mode
 set backspace=indent,eol,start
 
-set history=50		" keep 50 lines of command line history
-set ruler		" show the cursor position all the time
-set showcmd		" display incomplete commands
-set incsearch		" do incremental searching
+set history=50  " keep 50 lines of command line history
+set ruler       " show the cursor position all the time
+set showcmd     " display incomplete commands
+set incsearch   " do incremental searching
 
 " For Win32 GUI: remove 't' flag from 'guioptions': no tearoff menu entries
 " let &guioptions = substitute(&guioptions, "t", "", "g")
@@ -121,7 +121,7 @@ endif
 " C-N to unhighlight search results
 nmap <silent> <C-N> :silent noh<LF>
 
-highlight Normal ctermbg=0
+"highlight Normal ctermbg=0
 set encoding=utf-8
 
 " Show line numbers

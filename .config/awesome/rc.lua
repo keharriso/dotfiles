@@ -1,3 +1,4 @@
+--[[ INCLUDES ]]--
 -- Standard awesome library
 local gears = require 'gears'
 local awful = require 'awful'
@@ -11,6 +12,8 @@ local beautiful = require 'beautiful'
 local naughty = require 'naughty'
 local menubar = require 'menubar'
 
+
+--[[ ERRORS ]]--
 if awesome.startup_errors then
 	naughty.notify {
 		preset = naughty.config.presets.critical,
@@ -35,12 +38,39 @@ do
 	end)
 end
 
-local theme = 'owl_white'
+
+--[[ SETTINGS ]]--
+local theme = 'calvin'
 local date = ' %a %b %d @ %H:%M:%S '
 local terminal = os.getenv 'TERMINAL' or 'urxvtc'
 local mod = 'Mod4'
 local config = os.getenv 'XDG_CONFIG_HOME' or os.getenv 'HOME'..'/.config'
 
+local programs = {
+	'[ -z "`pidof pulseaudio`" ] && start-pulseaudio-x11',
+	'[ -d /usr/fonts/local ] && xset +fp /usr/share/fonts/local',
+	'xrdb -merge ~/.Xresources',
+	'[ -z "`pidof urxvtd`" ] && urxvtd -q -o -f &>/dev/null',
+	'[ -z "`pidof unclutter`" ] && unclutter -idle 2 -jitter 10',
+	'[ -z "`pidof xcompmgr`" ] && xcompmgr -c -C -t-15 -l-15 -r12 -o.75',
+	--'[ -z "`pidof pnmixer`" ] && pnmixer',
+	--'[ -z "`pidof timidity`" ] && timidity -iA',
+	'xset m 1/1 4'
+}
+
+local nmaster = 2
+local ncol = 1
+local mwfact = 0.6
+
+layouts = {
+	awful.layout.suit.tile.bottom,
+	awful.layout.suit.floating
+}
+
+tags = {names={'main', 'web', 'term', 'misc'}}
+
+
+--[[ THEMING ]]--
 beautiful.init(config..'/awesome/themes/'..theme..'/theme.lua')
 
 terminal_opts = beautiful[terminal..'_opts'] or {}
@@ -96,17 +126,12 @@ if theme ~= theme_current then
 	end
 end
 
-tags = {names={'main', 'web', 'term', 'misc'}}
+
+--[[ TAGS & WIDGETS ]]--
 clock = awful.widget.textclock(date, 1)
 systray = wibox.widget.systray()
 widgets = {}
 promptbox = {}
-
-layouts = {
-	awful.layout.suit.fair,
-	awful.layout.suit.fair.horizontal,
-	awful.layout.suit.floating
-}
 
 taglist = {
 	buttons = awful.util.table.join(
@@ -170,8 +195,15 @@ for s=1,screen.count() do
 	widgets[s]:set_widget(layout)
 	widgets[s].opacity = .9
 	widgets[s].ontop = true
+	for _,t in ipairs(tags[s]) do
+		awful.tag.setnmaster(nmaster, t)
+		awful.tag.setncol(ncol, t)
+		awful.tag.setmwfact(mwfact, t)
+	end
 end
 
+
+--[[ ACTIONS ]]--
 function focus(i)
 	return function ()
 		awful.client.focus.byidx(i)
@@ -218,17 +250,6 @@ function move(i)
 			local n = awful.tag.getidx(awful.tag.selected(s))
 			local m = (n + i - 1) % #tags[s] + 1
 			c:tags {tags[s][m]}
-		end
-	end
-end
-
-function shift(i)
-	return function ()
-		local c = client.focus
-		if c then
-			local s = c.screen
-			local n = (awful.tag.getidx(awful.tag.selected(s)) + i) % #tags[s] + 1
-			awful.client.movetotag(s:tags()[n], c)
 		end
 	end
 end
@@ -344,6 +365,8 @@ function fix(c)
 	end
 end
 
+
+--[[ HOTKEYS ]]--
 root.buttons(awful.util.table.join(
 	awful.button({}, 4, awful.tag.viewnext),
 	awful.button({}, 5, awful.tag.viewprev)
@@ -354,9 +377,7 @@ root.keys(awful.util.table.join(
 	awful.key({mod,          }, 'l',      awful.tag.viewnext),
 	awful.key({mod, 'Shift'  }, 'h',      move(-1)),
 	awful.key({mod, 'Shift'  }, 'l',      move(1)),
---	awful.key({mod, 'Control'}, 'h',      shift(-1)),
---	awful.key({mod, 'Control'}, 'l',      shift(1)),
-	awful.key({mod,          }, 'Tab',    urgent),
+	awful.key({mod,          }, 'tab',    urgent),
 	awful.key({mod,          }, 'j',      focus(1)),
 	awful.key({mod,          }, 'k',      focus(-1)),
 	awful.key({mod, 'Shift'  }, 'j',      swap(1)),
@@ -372,15 +393,29 @@ root.keys(awful.util.table.join(
 
 for i=1,#tags.names do
 	root.keys(awful.util.table.join(root.keys(),
---		awful.key({mod,          }, '#'..i+9, jump(i)),
---		awful.key({mod, 'Shift'  }, '#'..i+9, send(i)),
---		awful.key({mod, 'Control'}, '#'..i+9, toggle(i)),
---		awful.key({mod,          }, '#'..i+9, visible(i))
 		awful.key({mod,          }, '#'..i+9, visible(i)),
 		awful.key({mod, 'Shift'  }, '#'..i+9, toggle(i))
 	))
 end
 
+local client_keys = awful.util.table.join(
+	awful.key({mod,          }, 'f', floating),
+	awful.key({mod,          }, 'm', maximize),
+	awful.key({mod, 'Shift'  }, 'm', fullscreen),
+	awful.key({mod,          }, 'n', minimize),
+	awful.key({mod, 'Control'}, 'c', kill)
+)
+
+local client_buttons = awful.util.table.join(
+	awful.button({              }, 1, raise),
+	awful.button({mod           }, 1, awful.mouse.client.move),
+	awful.button({mod           }, 3, awful.mouse.client.resize),
+	awful.button({mod, 'Control'}, 2, kill)
+)
+
+
+
+--[[ RULES ]]--
 awful.rules.rules = {
 	{
 		rule = {},
@@ -389,19 +424,8 @@ awful.rules.rules = {
 			border_color = beautiful.border_normal,
 			size_hints_honor = false,
 			focus = true,
-			keys = awful.util.table.join(
-				awful.key({mod,          }, 'f', floating),
-				awful.key({mod,          }, 'm', maximize),
-				awful.key({mod, 'Shift'  }, 'm', fullscreen),
-				awful.key({mod,          }, 'n', minimize),
-				awful.key({mod, 'Control'}, 'c', kill)
-			),
-			buttons = awful.util.table.join(
-				awful.button({              }, 1, raise),
-				awful.button({mod           }, 1, awful.mouse.client.move),
-				awful.button({mod           }, 3, awful.mouse.client.resize),
-				awful.button({mod, 'Control'}, 2, kill)
-			)
+			keys = client_keys,
+			buttons = client_buttons
 		}
 	},
 	{
@@ -427,22 +451,18 @@ opacity = {
 	normal = setmetatable({}, {__index=function () return .85 end})
 }
 
-opacity.focused.URxvt = .85
-opacity.normal.URxvt = .35
+opacity.focused.URxvt = 0.9
+opacity.normal.URxvt = .45
 opacity.normal.Vanilla = 1
 opacity.normal.Eclipse = .9
 opacity.focused["org-spoutcraft-launcher-Main"] = 1
 opacity.normal["org-spoutcraft-launcher-Main"] = .9
 opacity.focused.VirtualBox = 1
 opacity.normal.VirtualBox = .9
+opacity.focused.Gimp = 1
+opacity.normal.Gimp = 1
 
 client.add_signal('manage', function (c, startup)
---	c:add_signal('mouse::enter', function(c)
---		if awful.client.focus.filter(c) then
---			client.focus = c
---		end
---	end)
-
 	c.opacity = opacity.focused[c.class]
 
 	fix(c)
@@ -457,3 +477,8 @@ end)
 
 client.connect_signal('focus', fix)
 client.connect_signal('unfocus', fix)
+
+--[[ PROGRAMS ]]--
+for _,p in ipairs(programs) do
+	awful.util.spawn_with_shell(p)
+end

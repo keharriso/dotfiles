@@ -73,4 +73,4 @@ xterm*|rxvt*) function precmd() {
 } ;;
 esac
 
-[ "$TTY" = "/dev/tty1" ] && exec startx || [ "$TTY" "=~" "tty" ] && archey3 || true
+[ "$TTY" = "/dev/tty1" ] && WM=awesome exec startx || [ "$TTY" "=~" "tty" ] && archey3 || true
